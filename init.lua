@@ -129,13 +129,22 @@ local function update_widgets(widgets, modules) --{{{
 end --}}}
 
 -- call the statusline command and set up the callback function
-M.setup = function (setup_tbl)
-  -- load setup args
-  for key,v in pairs(setup_tbl) do
-     M[key] = v
+M.setup = function (args) --{{{
+  -- load defaults
+  M.bar_command_limit = false
+  M.bar_command = 'py3status'
+  if type(args) == table then
+    -- load setup args
+    for key,v in pairs(args) do
+       M[key] = v
+    end
+  else
+    -- not my fault if someone puts something wrong in
+    M.container = args
   end
 
-  local py3_pid = awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout) --{{{
+  -- launch the bar
+  local py3_pid = awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout)
     -- call the parser
     local modules = parse_json(stdout, M.container)
     update_widgets(i3bar_widgets, modules)

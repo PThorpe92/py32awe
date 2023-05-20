@@ -1,13 +1,41 @@
 # py3status to awesomewm
-A module for converting [i3status](https://i3wm.org/docs/i3status.html)/[py3status](https://github.com/ultrabug/py3status) json output
-to awesomewm widgets, with colorization & clickibility.
+A module for converting [i3status](https://i3wm.org/docs/i3status.html)/[py3status](https://github.com/ultrabug/py3status) json output to awesomewm widgets, with colorization & clickibility.
 
-This is a module that takes an [awful.widget.layoutbox](https://awesomewm.org/doc/api/classes/awful.widget.layoutbox.html) and
-populates it with [awful.widget.textbox](https://awesomewm.org/doc/api/classes/wibox.widget.textbox.html)s for each module,
-and updates them when py3status spits out an update. It also
-attaches button handlers that pass commands to py3-cmd.
+This is a module that takes an [awful.widget.layoutbox](https://awesomewm.org/doc/api/classes/awful.widget.layoutbox.html) and populates it with [awful.widget.textbox](https://awesomewm.org/doc/api/classes/wibox.widget.textbox.html)s for each module, and updates them when `py3status` spits out an update. It also attaches button handlers that pass commands to `py3-cmd`.
 
-Note:
-I wrote this for py3status, but it should work for i3status.
-Not tested, and you'll have to put output_format = json in
-the config file.
+### Usage
+Create a container to keep your statusline in:
+`local statusline = wibox.layout.fixed.horizontal()`
+
+Require the module, and call `setup()`, passing it the container:
+`require("py32awe").setup(statusline)`
+
+And add the container to your existing bar:
+```lua
+awful.screen.connect_for_each_screen(function(s)
+-- ...
+    s.mywibox:setup {
+        layout = wibox.layout.align.horizontal,
+        -- ...
+        { -- Right widgets
+            statusline,
+            layout = wibox.layout.fixed.horizontal,
+        },
+    }
+    -- ...
+```
+
+`setup()` also optionally takes a table, instead of the container.
+    The table has three keys:
+    - (required) `container`: the mentioned container.
+    - (optional, string, default: 'py3status') `bar_command`: the command to run when starting the bar.
+    - (optional, maybe integer, default: false) `bar_command_limit`: the cpu % usage limit for the bar command-see notes.
+
+
+### Notes:
+I wrote this for py3status, but it should work for i3status. Not tested, and you'll have to set the output format to json in the config file.
+
+On `bar_command_limit`: at the time of writing, py3status has a bug ([my report](https://github.com/ultrabug/py3status/issues/2186)) where it uses 100% of a cpu core when called by a program that isn't `i3` or a graphical terminal. As a bodge, py32awe will call [cpulimit](https://github.com/ultrabug/py3status/issues/2186) and use that to limit it. I recommend setting `bar_command_limit` to about 3 to fix this, py3status runs fine limited.
+
+I copied this from my personal dotfiles, for history see the last commit before that [here](https://github.com/spiderforrest/fotdiles/commit/6f0334e8fe62e14fae1d3e2673dbe5089ba067fd).
+
