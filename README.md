@@ -27,19 +27,32 @@ awful.screen.connect_for_each_screen(function(s)
 
 `setup()` also optionally takes a table, instead of the container.
 
-    The table has three keys:
+The table has several keys:
 
-    - (required) `container`: the mentioned container.
+- `container` (required): the mentioned container.
 
-    - (optional, string, default: 'py3status') `bar_command`: the command to run when starting the bar.
+- `bar_command` (optional, string, default: 'py3status'): the command to run when starting the bar.
 
-    - (optional, maybe integer, default: false) `bar_command_limit`: the cpu % usage limit for the bar command-see notes.
+- `spacer_string` (optional, string, default: ' | '): a string placed between modules
+
+- `default_color` (optional, string, default: 'white'): the color to make modules that don't specify their own-it's [pango markup](https://docs.gtk.org/Pango/), but tl;dr: css colors
+
+- `bar_command_limit` (optional, maybe integer, default: false): the cpu % usage limit for the bar command-please see notes.
+
+- `module_override_handler` (optional, function, arguments (`module`, `widget`), default nil): a function that's called for each module during each update. `module` is a table with the data from py3status, `widget` is the awesome widget. Example that fixes the width of a clock:
+  ```lua
+  module_override_handler = function (module, widget)
+    if module.name == 'clock' then
+      widget.forced_width = 105
+    end
+  end
+  ```
 
 
 ### Notes:
 I wrote this for py3status, but it should work for i3status. Not tested, and you'll have to set the output format to json in the config file.
 
-On `bar_command_limit`: at the time of writing, py3status has a bug ([my report](https://github.com/ultrabug/py3status/issues/2186)) where it uses 100% of a cpu core when called by a program that isn't `i3` or a graphical terminal. As a bodge, py32awe will call [cpulimit](https://github.com/ultrabug/py3status/issues/2186) and use that to limit it. I recommend setting `bar_command_limit` to about 3 to fix this, py3status runs fine limited.
+On `bar_command_limit`: at the time of writing, py3status has a bug ([my report](https://github.com/ultrabug/py3status/issues/2186)) where it uses 100% of a cpu core when called by a program that isn't `i3` or a graphical terminal. As a bodge, py32awe will call [cpulimit](https://github.com/ultrabug/py3status/issues/2186) and use that to limit it, if `bar_command_limit` is truthy. I recommend setting `bar_command_limit` to about 3 to fix this, py3status runs fine limited. `bar_command_limit` to about 3 to fix this, py3status runs fine limited.
 
 I copied this from my personal dotfiles, for history see the last commit before that [here](https://github.com/spiderforrest/fotdiles/commit/6f0334e8fe62e14fae1d3e2673dbe5089ba067fd).
 

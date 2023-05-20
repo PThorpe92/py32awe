@@ -41,7 +41,7 @@ local gears = require("gears")
 local M = {}
 
 -- create the table to fill with widgets
-local i3bar_widgets = {}
+local bar_widgets = {}
 
 local function add_mouse_py3_passthrough (button, target) --{{{
       return awful.button({ }, button, function ()
@@ -52,16 +52,16 @@ end --}}}
 -- create the widgets the modules repersent
 local function generate_widgets(modules, box) --{{{
   -- clear out the previous set of textboxes
-  for _, widget in ipairs(i3bar_widgets) do
+  for _, widget in ipairs(bar_widgets) do
     box:remove_widgets(widget)
   end
 
   -- populate a table with generated textbox widgets
   for i, module in ipairs(modules) do
     -- just create a buncha empty textboxes, we'll just mutate them later
-    i3bar_widgets[i] = wibox.widget.textbox()
+    bar_widgets[i] = wibox.widget.textbox()
     -- attach buttons
-    i3bar_widgets[i]:buttons(gears.table.join(
+    bar_widgets[i]:buttons(gears.table.join(
       add_mouse_py3_passthrough(1, module.name),
       add_mouse_py3_passthrough(2, module.name),
       add_mouse_py3_passthrough(3, module.name),
@@ -70,7 +70,7 @@ local function generate_widgets(modules, box) --{{{
       ))
   end
   -- add the widgets to the box
-  for _, widget in ipairs(i3bar_widgets) do
+  for _, widget in ipairs(bar_widgets) do
     box:add(widget)
   end
 end --}}}
@@ -81,7 +81,7 @@ local function parse_json(json_str, box) --{{{
   local module_itr = 1 -- lua arrays actually start at anything you want btw
 
   -- track the number of modules, so if it grows, we can regenerate the widgets
-  local i3_module_counter = #i3bar_widgets or 0
+  local i3_module_counter = #bar_widgets or 0
   -- iterate through all the {} pairs-each is a i3/py3 module
   for module_str in string.gmatch(json_str, "{.-}") do
     -- create the module's table and grab the name to use as key
@@ -106,48 +106,43 @@ end --}}}
 
 -- set the text inside each widget to match the i3 output
 local function update_widgets(widgets, modules) --{{{
+    -- set text for each widget
   for i, widget in ipairs(widgets) do
     local string
     if modules[i].color then -- they don't always have the color key
       string = '<span color="' .. modules[i].color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. "</span>"
     else
-      string = '<span color="white">' .. gears.string.xml_escape(modules[i].full_text) .. '</span>'
+      string = '<span color="' .. M.default_color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. '</span>'
     end
-    -- the clock makes the whole thing wiggle wiggle wiggle, stop that
-    if modules[i].name == "tztime" then
-      widget.forced_width = 161
-    elseif modules[i].name == 'async_script' then
-      widget.forced_width = 168
-    elseif modules[i].name == 'clock' then -- the est one
-      widget.forced_width = 105
-    end
+
+    -- call a user function to modify the widget, if they want
+    M.module_override_handler(modules[i], widget)
+
     if i ~= 1 then -- don't put a seperator on the end
-      string = " | " .. string
+      string = M.spacer .. string
     end
+
     widget:set_markup_silently(string)
   end
 end --}}}
 
 -- call the statusline command and set up the callback function
-M.setup = function (args) --{{{
-  -- load defaults
+M.setup = function (setup_tbl)
+  -- default args
   M.bar_command_limit = false
-  M.bar_command = 'py3status'
-  if type(args) == table then
-    -- load setup args
-    for key,v in pairs(args) do
-       M[key] = v
-    end
-  else
-    -- not my fault if someone puts something wrong in
-    M.container = args
+  M.bar_command = "py3status"
+  M.spacer = ' | '
+  M.default_color = 'white'
+  M.module_override_handler = function(_,_) end
+  -- load setup args
+  for key,v in pairs(setup_tbl) do
+     M[key] = v
   end
 
-  -- launch the bar
-  local py3_pid = awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout)
+  local py3_pid = awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout) --{{{
     -- call the parser
     local modules = parse_json(stdout, M.container)
-    update_widgets(i3bar_widgets, modules)
+    update_widgets(bar_widgets, modules)
   end })
 
   -- while i wait for a resolution on my bug report here's hack aha
