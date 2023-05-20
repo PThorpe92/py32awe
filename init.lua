@@ -108,21 +108,21 @@ end --}}}
 local function update_widgets(widgets, modules) --{{{
     -- set text for each widget
   for i, widget in ipairs(widgets) do
-    local string
+    local pango_string
     if modules[i].color then -- they don't always have the color key
-      string = '<span color="' .. modules[i].color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. "</span>"
+      pango_string = '<span color="' .. modules[i].color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. "</span>"
     else
-      string = '<span color="' .. M.default_color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. '</span>'
+      pango_string = '<span color="' .. M.default_color .. '">' .. gears.string.xml_escape(modules[i].full_text) .. '</span>'
     end
 
     -- call a user function to modify the widget, if they want
     M.module_override_handler(modules[i], widget)
 
     if i ~= 1 then -- don't put a seperator on the end
-      string = M.spacer .. string
+      pango_string = M.spacer .. pango_string
     end
 
-    widget:set_markup_silently(string)
+    widget:set_markup_silently(pango_string)
   end
 end --}}}
 
