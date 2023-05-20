@@ -26,9 +26,13 @@ awful.screen.connect_for_each_screen(function(s)
 ```
 
 `setup()` also optionally takes a table, instead of the container.
+
     The table has three keys:
+
     - (required) `container`: the mentioned container.
+
     - (optional, string, default: 'py3status') `bar_command`: the command to run when starting the bar.
+
     - (optional, maybe integer, default: false) `bar_command_limit`: the cpu % usage limit for the bar command-see notes.
 
 
