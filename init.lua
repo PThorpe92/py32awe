@@ -139,17 +139,12 @@ M.setup = function (setup_tbl)
      M[key] = v
   end
 
-  local py3_pid = awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout) --{{{
+    awful.spawn.with_line_callback(M.bar_command, { stdout = function (stdout) --{{{
     -- call the parser
     local modules = parse_json(stdout, M.container)
     update_widgets(bar_widgets, modules)
   end })
 
-  -- while i wait for a resolution on my bug report here's hack aha
-  -- LGTM
-  if M.bar_command_limit then
-    awful.spawn.with_shell("sleep 6 && cpulimit -p " .. tostring(py3_pid) .. " -l " .. M.bar_command_limit)
-  end
 end
 
 
